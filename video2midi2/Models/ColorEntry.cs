@@ -13,14 +13,25 @@
             byte darkR, byte darkG, byte darkB,
             int midiChannel = 0, int midiProgram = 0)
         {
-            Light = new RgbColor(lightR, lightG, lightB);
-            Dark = new RgbColor(darkR, darkG, darkB);
+            _light = new RgbColor(lightR, lightG, lightB);
+            _dark = new RgbColor(darkR, darkG, darkB);
             MidiChannel = midiChannel;
             MidiProgram = midiProgram;
         }
 
-        public RgbColor Light { get; set; }
-        public RgbColor Dark { get; set; }
+        private RgbColor _light;
+        public RgbColor Light
+        {
+            get => _light;
+            set => SetProperty(ref _light, value);  // ← raises PropertyChanged
+        }
+
+        private RgbColor _dark;
+        public RgbColor Dark
+        {
+            get => _dark;
+            set => SetProperty(ref _dark, value);   // ← raises PropertyChanged
+        }
 
         private int _midiChannel;
         public int MidiChannel

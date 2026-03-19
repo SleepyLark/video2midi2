@@ -75,8 +75,10 @@ namespace Video2Midi2.ViewModels
         private CancellationTokenSource? _processingCts;
         private HelpWindow _helpWindow = null;
 
-        //  Constructor 
 
+        public ColorMapViewModel ColorMap { get; }
+
+        //  Constructor 
         public MainViewModel(
             AppPreferences prefs,
             IMidiProcessingService midiProc,
@@ -85,12 +87,13 @@ namespace Video2Midi2.ViewModels
             IVideoService video,
             IFileService fileService)
         {
-            this.Prefs = prefs;
+            Prefs = prefs;
             _midiProc = midiProc;
             _midiExport = midiExport;
             _settings = settings;
             _video = video;
             _fileService = fileService;
+            ColorMap = new ColorMapViewModel(prefs);
         }
 
         //  Initialisation 

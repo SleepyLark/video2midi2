@@ -3,6 +3,7 @@ using System.Windows.Input;
 using SkiaSharp;
 using SkiaSharp.Views.Desktop;
 using SkiaSharp.Views.WPF;
+using Video2Midi2.Models;
 using Video2Midi2.Services;
 using Video2Midi2.ViewModels;
 
@@ -262,8 +263,20 @@ public partial class MainWindow : Window
         var pos = e.GetPosition(MainCanvas);
         double dpi = GetDpiScale();
         var (vx, vy) = ScreenToVideo(pos.X * dpi, pos.Y * dpi);
-        bool ctrlHeld = Keyboard.Modifiers.HasFlag(ModifierKeys.Control);
 
+        // If eyedropper is active, sample the pixel and apply it
+        if (_vm.ColorMap.IsEyedropping)
+        {
+            if (e.ChangedButton == MouseButton.Left)
+            {
+                SampleAndApplyEyedropColor((int)vx, (int)vy);
+                e.Handled = true;
+            }
+            return;
+        }
+
+        // Normal mouse handling
+        bool ctrlHeld = Keyboard.Modifiers.HasFlag(ModifierKeys.Control);
         if (e.ChangedButton == MouseButton.Left)
             _vm.OnLeftMouseDown(vx, vy, ctrlHeld);
         else if (e.ChangedButton == MouseButton.Right)
@@ -273,17 +286,54 @@ public partial class MainWindow : Window
         _vm.RequestCanvasRedraw?.Invoke();
     }
 
+    private void SampleAndApplyEyedropColor(int videoX, int videoY)
+    {
+        if (_vm.CurrentVideoFrame == null || _vm.CurrentVideoFrame.Empty()) return;
+
+        // Clamp to frame bounds
+        int x = Math.Clamp(videoX, 0, _vm.Video.VideoWidth - 1);
+        int y = Math.Clamp(videoY, 0, _vm.Video.VideoHeight - 1);
+
+        var (r, g, b) = _vm.Video.SamplePixel(_vm.CurrentVideoFrame, x, y);
+        _vm.ColorMap.ApplyEyedropColor(new RgbColor(r, g, b));
+    }
+
+    private void CancelEyedrop_Click(object sender, RoutedEventArgs e)
+    {
+        _vm.ColorMap.CancelEyedrop();
+    }
+
+    // Add to MainCanvas_MouseMove
     private void MainCanvas_MouseMove(object sender, MouseEventArgs e)
     {
+        var pos = e.GetPosition(MainCanvas);
+        double dpi = GetDpiScale();
+        var (vx, vy) = ScreenToVideo(pos.X * dpi, pos.Y * dpi);
+
+        // Live preview while eyedropping — no click needed
+        if (_vm.ColorMap.IsEyedropping)
+        {
+            SampleLivePreview((int)vx, (int)vy);
+            return;  // don't process drag while eyedropping
+        }
+
         if (e.LeftButton != MouseButtonState.Pressed &&
             e.RightButton != MouseButtonState.Pressed)
             return;
 
-        var pos = e.GetPosition(MainCanvas);
-        double dpi = GetDpiScale();
-        var (vx, vy) = ScreenToVideo(pos.X * dpi, pos.Y * dpi);
         _vm.OnMouseMove(vx, vy);
         _vm.RequestCanvasRedraw?.Invoke();
+    }
+
+    private void SampleLivePreview(int videoX, int videoY)
+    {
+        if (_vm.CurrentVideoFrame == null || _vm.CurrentVideoFrame.Empty()) return;
+
+        int x = Math.Clamp(videoX, 0, _vm.Video.VideoWidth - 1);
+        int y = Math.Clamp(videoY, 0, _vm.Video.VideoHeight - 1);
+
+        var (r, g, b) = _vm.Video.SamplePixel(_vm.CurrentVideoFrame, x, y);
+        _vm.ColorMap.UpdateLivePreview(new RgbColor(r, g, b));
     }
 
     private void MainCanvas_MouseUp(object sender, MouseButtonEventArgs e)
