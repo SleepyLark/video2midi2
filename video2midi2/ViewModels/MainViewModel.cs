@@ -365,6 +365,10 @@ namespace Video2Midi2.ViewModels
                 DragState = new KeyDragState(DragMode.DragSingle, hitKey);
                 SelectedKeyIndex = hitKey;
             }
+            else
+            {
+                SelectedKeyIndex = -1;
+            }
         }
 
         public void OnRightMouseDown(double videoX, double videoY)
@@ -372,6 +376,10 @@ namespace Video2Midi2.ViewModels
             int hitKey = HitTestKey(videoX, videoY);
             double offsetX = hitKey >= 0 ? Prefs.KeyPositions[hitKey].RelativeX : 0;
             DragState = new KeyDragState(DragMode.DragAll, hitKey, offsetX);
+
+            // Quick move all keys without dragging first
+            Prefs.XOffsetWhiteKeys = (int)(videoX - DragState.OffsetX);
+            Prefs.YOffsetWhiteKeys = (int)videoY;
         }
 
         public void OnMouseUp()
@@ -405,13 +413,13 @@ namespace Video2Midi2.ViewModels
             _midiProc.UpdateKeyPositions(Prefs);
         }
 
-        private int HitTestKey(double videoX, double videoY, int hitbox = 5)
+        private int HitTestKey(double videoX, double videoY, int hitbox = 10)
         {
             for (int i = 0; i < Prefs.KeyPositions.Count; i++)
             {
                 double kx = Prefs.XOffsetWhiteKeys + Prefs.KeyPositions[i].RelativeX;
                 double ky = Prefs.YOffsetWhiteKeys + Prefs.KeyPositions[i].RelativeY;
-                if (Math.Abs(videoX - kx) < hitbox && Math.Abs(videoY - ky) < hitbox)
+                if (Math.Abs(videoX - kx) < hitbox && Math.Abs(videoY - ky) <= hitbox)
                     return i;
             }
             return -1;
