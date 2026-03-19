@@ -33,8 +33,10 @@ namespace Video2Midi2.ViewModels
         //  Observable State 
 
         public AppPreferences Prefs { get; }
+		public IVideoService Video => _video;
+		public IMidiProcessingService MidiProc => _midiProc;
 
-        public Action? RequestCanvasRedraw { get; set; }
+		public Action? RequestCanvasRedraw { get; set; }
 
         [ObservableProperty] private string _windowTitle = "Video2Midi";
         [ObservableProperty] private bool _isProcessing = false;
