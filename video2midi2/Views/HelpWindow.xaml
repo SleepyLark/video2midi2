@@ -1,0 +1,54 @@
+﻿<Window x:Class="Video2Midi2.Views.HelpWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Video2Midi2.Views"
+        mc:Ignorable="d"
+        Title="Hotkeys" Height="450" Width="800"
+        WindowStartupLocation="CenterOwner">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="15">
+        <StackPanel>
+            <TextBlock Text="General Controls" FontSize="16" FontWeight="Bold" Margin="0,0,0,10"/>
+            <TextBlock Text="H — Show/Hide the window title" Margin="0,2"/>
+            <TextBlock Text="Q — Begin to recreate MIDI" Margin="0,2"/>
+            <TextBlock Text="Tab — Show/Hide all windows" Margin="0,2"/>
+            <TextBlock Text="Escape — Quit" Margin="0,2"/>
+            <TextBlock Text="Space — Abort recreation and save MIDI file to disk" Margin="0,2"/>
+            <TextBlock Text="F4 — Move all windows to the mouse pointer" Margin="0,2"/>
+
+            <Separator Margin="0,15"/>
+            <TextBlock Text="Video Navigation" FontSize="16" FontWeight="Bold" Margin="0,10"/>
+            <TextBlock Text="S — Set start frame (Shift: Set processing start to beginning)" Margin="0,2"/>
+            <TextBlock Text="E — Set end frame (Shift: Set processing end to ending)" Margin="0,2"/>
+            <TextBlock Text="Home / End — Go to the beginning or end of the video" Margin="0,2"/>
+            <TextBlock Text="Page Up / Page Down — Scroll video (Shift: Fast scroll)" Margin="0,2"/>
+
+            <Separator Margin="0,15"/>
+            <TextBlock Text="Settings &amp; Toggles" FontSize="16" FontWeight="Bold" Margin="0,10"/>
+            <TextBlock Text="P — Force separate to two channels (On single color video)" Margin="0,2"/>
+            <TextBlock Text="O — Enable or disable overlapping notes" Margin="0,2"/>
+            <TextBlock Text="I — Enable/disable ignore/lengthening of minimal duration notes" Margin="0,2"/>
+            <TextBlock Text="R — Enable or disable resize function" Margin="0,2"/>
+            <TextBlock Text="F2 / F3 — Save / Load settings" Margin="0,2"/>
+
+            <Separator Margin="0,15"/>
+            <TextBlock Text="Key &amp; Octave Adjustments" FontSize="16" FontWeight="Bold" Margin="0,10"/>
+            <TextBlock Text="[ / ] — Change base octave" Margin="0,2"/>
+            <TextBlock Text="+ / - — Rotate keys by 5°" Margin="0,2"/>
+            <TextBlock Text="Arrows — Key adjustment (Shift: Large increment)" Margin="0,2"/>
+            <TextBlock Text="Alt + Up/Down — Sparks position adjustment" Margin="0,2"/>
+            <TextBlock Text="Numpad 4, 6, 8, 2 — Move selected key by 1 pixel" Margin="0,2"/>
+            <TextBlock Text="Numpad 1, 3 — Vertical / Horizontal alignment" Margin="0,2"/>
+
+            <Separator Margin="0,15"/>
+            <TextBlock Text="Mouse Controls" FontSize="16" FontWeight="Bold" Margin="0,10"/>
+            <TextBlock Text="Mouse Wheel — Key adjustment" Margin="0,2"/>
+            <TextBlock Text="Left Click — Drag selected key / Select color from map" Margin="0,2"/>
+            <TextBlock Text="Ctrl + Left Click — Update selected color in the color map" Margin="0,2"/>
+            <TextBlock Text="Ctrl + 0 — Disable selected color in the color map" Margin="0,2"/>
+            <TextBlock Text="Right Click — Drag all keys (Relative to selected key)" Margin="0,2"/>
+        </StackPanel>
+    </ScrollViewer>
+</Window>
+

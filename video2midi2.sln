@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.37027.9 d17.14
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Video2Midi2", "video2midi2\Video2Midi2.csproj", "{A09E17D0-4E15-462F-9B25-038F7DAE94D6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Video2Midi2.Tests", "Video2Midi2.Tests\Video2Midi2.Tests.csproj", "{1010F6C8-F62B-4F4A-A601-3B3382757699}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A09E17D0-4E15-462F-9B25-038F7DAE94D6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A09E17D0-4E15-462F-9B25-038F7DAE94D6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A09E17D0-4E15-462F-9B25-038F7DAE94D6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A09E17D0-4E15-462F-9B25-038F7DAE94D6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1010F6C8-F62B-4F4A-A601-3B3382757699}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1010F6C8-F62B-4F4A-A601-3B3382757699}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1010F6C8-F62B-4F4A-A601-3B3382757699}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1010F6C8-F62B-4F4A-A601-3B3382757699}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {21DD950C-BA41-4ADC-9E0C-EF655A6A6C8A}
+	EndGlobalSection
+EndGlobal
