@@ -32,6 +32,7 @@ public partial class MainWindow : Window
         MainCanvas.MouseDown += MainCanvas_MouseDown;
         MainCanvas.MouseMove += MainCanvas_MouseMove;
         MainCanvas.MouseUp += MainCanvas_MouseUp;
+        MainCanvas.MouseWheel += MainCanvas_MouseWheel;
     }
 
     private void SeekSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
@@ -340,6 +341,12 @@ public partial class MainWindow : Window
     {
         _vm.OnMouseUp();
         MainCanvas.ReleaseMouseCapture();
+        _vm.RequestCanvasRedraw?.Invoke();
+    }
+
+    private void MainCanvas_MouseWheel(object sender, MouseWheelEventArgs e)
+    {
+        _vm.OnMouseWheel(e.Delta);
         _vm.RequestCanvasRedraw?.Invoke();
     }
 }
