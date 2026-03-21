@@ -10,13 +10,15 @@
     {
         public ColorEntry(
             byte lightR, byte lightG, byte lightB,
-            byte darkR, byte darkG, byte darkB,
-            int midiChannel = 0, int midiProgram = 0)
+            byte darkR,  byte darkG,  byte darkB,
+            int midiChannel = 0, int midiProgram = 0,
+            bool isEnabled = true)
         {
-            _light = new RgbColor(lightR, lightG, lightB);
-            _dark = new RgbColor(darkR, darkG, darkB);
+            _light      = new RgbColor(lightR, lightG, lightB);
+            _dark       = new RgbColor(darkR,  darkG,  darkB);
             MidiChannel = midiChannel;
             MidiProgram = midiProgram;
+            _isEnabled  = isEnabled;
         }
 
         private RgbColor _light;
@@ -47,10 +49,23 @@
             set => SetProperty(ref _midiProgram, Math.Clamp(value, 0, 127));
         }
 
-        /// <summary>A zeroed-out color entry is treated as disabled.</summary>
-        public bool IsEnabled => Light != RgbColor.Black || Dark != RgbColor.Black;
+        // ── Enabled flag ───────────────────────────────────────────────────────
+        // IsEnabled is a proper boolean rather than a color check so that:
+        //  • new channels can start disabled without having any color set
+        //  • disabling a channel doesn't corrupt its saved colors
+        //  • black is a valid color value for a channel that is enabled
+        private bool _isEnabled;
+        public bool IsEnabled
+        {
+            get => _isEnabled;
+            set => SetProperty(ref _isEnabled, value);
+        }
 
-        public void Disable() { Light = RgbColor.Black; Dark = RgbColor.Black; }
+        /// <summary>
+        /// Marks this entry as inactive. Colors are preserved so they can be
+        /// re-enabled later. The detection service skips disabled entries.
+        /// </summary>
+        public void Disable() => IsEnabled = false;
     }
 
     /// <summary>

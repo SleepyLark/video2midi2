@@ -59,6 +59,20 @@ namespace Video2Midi2.ViewModels
         // Line height for visual overlays
         [ObservableProperty] private double _lineHeight = 20;
 
+        // Floating panel visibility — bound to ToggleButton.IsChecked in the toggle bar
+        [ObservableProperty] private bool _isDetectionPanelVisible  = false;
+        [ObservableProperty] private bool _isKeyLayoutPanelVisible  = false;
+        [ObservableProperty] private bool _isSparksPanelVisible     = false;
+        [ObservableProperty] private bool _isExtraPanelVisible      = false;
+
+        // Sparks panel bindings
+        [ObservableProperty] private double _sparksHeight = 1;
+        [ObservableProperty] private double _sparksDelta  = 50;
+
+        // Extra panel bindings
+        [ObservableProperty] private double _alternateSensitivityOffset = 0;
+        [ObservableProperty] private double _selectedColorDelta         = 50;
+
         [ObservableProperty] private string _videoResolution = string.Empty;
         [ObservableProperty] private double _videoFps;
         [ObservableProperty] private string _frameRangeDisplay = "F: 0 — 0";
@@ -584,6 +598,41 @@ namespace Video2Midi2.ViewModels
                 Prefs.AlternateKeyColors.Add(RgbColor.Black);
 
             Prefs.AlternateKeyColors[keyIndex] = new RgbColor(r, g, b);
+        }
+
+        //  Panel-specific Commands 
+
+        [RelayCommand]
+        public void VerticalAlignKeys() => AlignKeys(vertical: true);
+
+        [RelayCommand]
+        public void HorizontalAlignKeys() => AlignKeys(vertical: false);
+
+        [RelayCommand]
+        public void MoveSparksUp() => Prefs.SparksYPosition -= 1;
+
+        [RelayCommand]
+        public void MoveSparksDown() => Prefs.SparksYPosition += 1;
+
+        // The existing ReadAllKeyColors() is used internally, so this relay command wrapper
+        // is named SampleAllKeyColors — bound in XAML as SampleAllKeyColorsCommand.
+        // The Extra panel binds to ReadAllKeyColorsCommand — handled as a click handler
+        // in the code-behind calling _vm.ReadAllKeyColors() directly instead.
+        [RelayCommand]
+        public void SampleAllKeyColors()
+        {
+            ReadAllKeyColors();
+            StatusMessage = "Baseline colors sampled for all keys.";
+        }
+
+        [RelayCommand]
+        public void UpdateSelectedKeyColor()
+        {
+            if (SelectedKeyIndex >= 0)
+            {
+                ReadKeyColor(SelectedKeyIndex);
+                StatusMessage = $"Color updated for key {SelectedKeyIndex}.";
+            }
         }
 
         //  Key Alignment Helpers 

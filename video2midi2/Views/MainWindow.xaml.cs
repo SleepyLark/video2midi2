@@ -1,4 +1,5 @@
 ﻿using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 using SkiaSharp;
 using SkiaSharp.Views.Desktop;
@@ -349,4 +350,69 @@ public partial class MainWindow : Window
         _vm.OnMouseWheel(e.Delta);
         _vm.RequestCanvasRedraw?.Invoke();
     }
+
+    //  Floating panel drag support 
+    // Panels live in a Canvas overlay above the SKElement. The Canvas itself has
+    // no Background so mouse events pass through empty areas to MainCanvas.
+    // Drag is handled here in the code-behind rather than in the ViewModel because
+    // it is purely a View concern (moving a UI element on a Canvas).
+
+    private Border?              _draggedPanel;
+    private System.Windows.Point _dragOffset;
+
+    /// <summary>Maps the Tag string set on each title Bar to its parent Border.</summary>
+    private Border? PanelFromTag(object? tag) => tag?.ToString() switch
+    {
+        "DetectionPanel"     => DetectionPanel,
+        "KeyLayoutPanel"     => KeyLayoutPanel,
+        "SparksPanel"        => SparksPanel,
+        "ExtraPanel"         => ExtraPanel,
+        "ChannelExpandPanel" => ChannelExpandPanel,
+        _                    => null
+    };
+
+    private void Panel_TitleBar_MouseDown(object sender, MouseButtonEventArgs e)
+    {
+        if (e.ChangedButton != MouseButton.Left) return;
+        var titleBar = (Border)sender;
+        _draggedPanel = PanelFromTag(titleBar.Tag);
+        if (_draggedPanel == null) return;
+
+        // Record click position relative to the panel so the drag feels natural
+        _dragOffset = e.GetPosition(_draggedPanel);
+        titleBar.CaptureMouse();
+        e.Handled = true; // prevent event reaching SKElement
+    }
+
+    private void Panel_TitleBar_MouseMove(object sender, MouseEventArgs e)
+    {
+        if (_draggedPanel == null || e.LeftButton != MouseButtonState.Pressed) return;
+
+        var pos      = e.GetPosition(OverlayCanvas);
+        double newLeft = pos.X - _dragOffset.X;
+        double newTop  = pos.Y - _dragOffset.Y;
+
+        // Clamp so panel can't be fully dragged off-screen
+        newLeft = Math.Clamp(newLeft, -_draggedPanel.ActualWidth  + 40, OverlayCanvas.ActualWidth  - 40);
+        newTop  = Math.Clamp(newTop,  0,                                OverlayCanvas.ActualHeight - 40);
+
+        Canvas.SetLeft(_draggedPanel, newLeft);
+        Canvas.SetTop (_draggedPanel, newTop);
+        e.Handled = true;
+    }
+
+    private void Panel_TitleBar_MouseUp(object sender, MouseButtonEventArgs e)
+    {
+        ((Border)sender).ReleaseMouseCapture();
+        _draggedPanel = null;
+        e.Handled = true;
+    }
+
+    //  Close button handlers 
+
+    private void CloseDetectionPanel_Click    (object sender, RoutedEventArgs e) => _vm.IsDetectionPanelVisible          = false;
+    private void CloseKeyLayoutPanel_Click    (object sender, RoutedEventArgs e) => _vm.IsKeyLayoutPanelVisible          = false;
+    private void CloseSparksPanel_Click       (object sender, RoutedEventArgs e) => _vm.IsSparksPanelVisible             = false;
+    private void CloseExtraPanel_Click        (object sender, RoutedEventArgs e) => _vm.IsExtraPanelVisible              = false;
+    private void CloseChannelExpandPanel_Click(object sender, RoutedEventArgs e) => _vm.ColorMap.IsExpandPanelVisible    = false;
 }

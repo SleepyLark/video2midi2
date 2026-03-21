@@ -1,4 +1,4 @@
-﻿<Window x:Class="Video2Midi2.MainWindow"
+<Window x:Class="Video2Midi2.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:local="clr-namespace:Video2Midi2.Converters"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -8,10 +8,101 @@
         MinHeight="400" MinWidth="640"
         Background="#1E1E1E">
 
+    <Window.InputBindings>
+        <KeyBinding Key="F2" Command="{Binding SaveSettingsCommand}"/>
+        <KeyBinding Key="F3" Command="{Binding LoadSettingsCommand}"/>
+        <KeyBinding Key="O"  Command="{Binding ToggleNotesOverlapCommand}"/>
+        <KeyBinding Key="I"  Command="{Binding ToggleIgnoreMinimalCommand}"/>
+        <KeyBinding Key="OemCloseBrackets" Command="{Binding RaiseOctaveCommand}"/>
+        <KeyBinding Key="OemOpenBrackets"  Command="{Binding LowerOctaveCommand}"/>
+        <KeyBinding Key="Home" Command="{Binding ScrollToStartCommand}"/>
+        <KeyBinding Key="End"  Command="{Binding ScrollToEndCommand}"/>
+        <KeyBinding Key="Add"      Command="{Binding RotateClockwiseCommand}"/>
+        <KeyBinding Key="Subtract" Command="{Binding RotateCounterClockwiseCommand}"/>
+        <KeyBinding Key="O" Modifiers="Ctrl" Command="{Binding OpenFileCommand}"/>
+    </Window.InputBindings>
+
     <Window.Resources>
-        <local:RgbColorToBrushConverter  x:Key="RgbToBrush"/>
-        <BooleanToVisibilityConverter    x:Key="BoolToVisibility"/>
+        <local:RgbColorToBrushConverter         x:Key="RgbToBrush"/>
+        <BooleanToVisibilityConverter           x:Key="BoolToVisibility"/>
         <local:InverseBoolToVisibilityConverter x:Key="InverseBoolToVisibility"/>
+        <local:DoubleToIntConverter             x:Key="DoubleToInt"/>
+
+        <!--  Panel toggle button (ToggleButton in the top bar)  -->
+        <Style x:Key="PanelToggleButton" TargetType="ToggleButton">
+            <Setter Property="Background"      Value="#2D2D2D"/>
+            <Setter Property="Foreground"      Value="#AAAAAA"/>
+            <Setter Property="BorderBrush"     Value="#444444"/>
+            <Setter Property="BorderThickness" Value="1,0,1,0"/>
+            <Setter Property="Padding"         Value="10,5"/>
+            <Setter Property="FontSize"        Value="11"/>
+            <Setter Property="Cursor"          Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ToggleButton">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter Property="Background"  Value="#3C3C3C"/>
+                                <Setter Property="Foreground"  Value="#FFFFFF"/>
+                                <Setter Property="BorderBrush" Value="#569CD6"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#383838"/>
+                                <Setter Property="Foreground" Value="#CCCCCC"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!--  Floating panel outer chrome 
+             Background uses a semi-transparent dark color (E0 = ~88% opacity)
+             so the video is faintly visible behind open panels. -->
+        <Style x:Key="FloatingPanel" TargetType="Border">
+            <Setter Property="Background"      Value="#E01E1E1E"/>
+            <Setter Property="BorderBrush"     Value="#666666"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius"    Value="4"/>
+        </Style>
+
+        <!--  Floating panel title bar (drag handle)  -->
+        <Style x:Key="PanelTitleBar" TargetType="Border">
+            <Setter Property="Background"   Value="#CC2D2D2D"/>
+            <Setter Property="Padding"      Value="8,5"/>
+            <Setter Property="CornerRadius" Value="3,3,0,0"/>
+            <Setter Property="Cursor"       Value="SizeAll"/>
+        </Style>
+
+        <!--  Section header inside a panel  -->
+        <Style x:Key="SectionHeader" TargetType="TextBlock">
+            <Setter Property="Foreground"  Value="#666666"/>
+            <Setter Property="FontSize"    Value="10"/>
+            <Setter Property="FontWeight"  Value="SemiBold"/>
+            <Setter Property="Margin"      Value="0,0,0,5"/>
+        </Style>
+
+        <!--  Row label for a setting  -->
+        <Style x:Key="SettingLabel" TargetType="TextBlock">
+            <Setter Property="Foreground"        Value="#999999"/>
+            <Setter Property="FontSize"          Value="11"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Width"             Value="130"/>
+        </Style>
+
+        <!--  CheckBox styled for dark panels  -->
+        <Style x:Key="DarkCheckBox" TargetType="CheckBox">
+            <Setter Property="Foreground"        Value="#CCCCCC"/>
+            <Setter Property="FontSize"          Value="11"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Cursor"            Value="Hand"/>
+        </Style>
 
         <!-- Swatch button style — the clickable color box -->
         <Style x:Key="SwatchButton" TargetType="Button">
@@ -25,11 +116,11 @@
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
                         <Border Background="{TemplateBinding Background}"
-                            BorderBrush="{TemplateBinding BorderBrush}"
-                            BorderThickness="{TemplateBinding BorderThickness}"
-                            CornerRadius="2">
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="2">
                             <ContentPresenter HorizontalAlignment="Center"
-                                          VerticalAlignment="Center"/>
+                                              VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
@@ -41,16 +132,15 @@
             </Setter>
         </Style>
 
-        
         <!-- Dark button style used throughout -->
         <Style x:Key="DarkButton" TargetType="Button">
-            <Setter Property="Background" Value="#3C3C3C"/>
-            <Setter Property="Foreground" Value="#CCCCCC"/>
-            <Setter Property="BorderBrush" Value="#555555"/>
+            <Setter Property="Background"      Value="#3C3C3C"/>
+            <Setter Property="Foreground"      Value="#CCCCCC"/>
+            <Setter Property="BorderBrush"     Value="#555555"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Padding" Value="8,3"/>
-            <Setter Property="FontSize" Value="11"/>
-            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Padding"         Value="8,3"/>
+            <Setter Property="FontSize"        Value="11"/>
+            <Setter Property="Cursor"          Value="Hand"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
@@ -85,49 +175,47 @@
 
         <!-- Accent button for the Reconstruct action -->
         <Style x:Key="AccentButton" TargetType="Button" BasedOn="{StaticResource DarkButton}">
-            <Setter Property="Background" Value="#569CD6"/>
-            <Setter Property="Foreground" Value="#FFFFFF"/>
+            <Setter Property="Background"  Value="#569CD6"/>
+            <Setter Property="Foreground"  Value="#FFFFFF"/>
             <Setter Property="BorderBrush" Value="#4A88BE"/>
-            <Setter Property="FontSize" Value="12"/>
-            <Setter Property="Padding" Value="14,5"/>
+            <Setter Property="FontSize"    Value="12"/>
+            <Setter Property="Padding"     Value="14,5"/>
         </Style>
 
         <!-- Label style for the toolbar -->
         <Style x:Key="ToolbarLabel" TargetType="TextBlock">
-            <Setter Property="Foreground" Value="#888888"/>
-            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Foreground"        Value="#888888"/>
+            <Setter Property="FontSize"          Value="11"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
         </Style>
 
         <!-- Value readout next to sliders -->
         <Style x:Key="ValueLabel" TargetType="TextBlock">
-            <Setter Property="Foreground" Value="#CCCCCC"/>
-            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Foreground"        Value="#CCCCCC"/>
+            <Setter Property="FontSize"          Value="11"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
-            <Setter Property="MinWidth" Value="28"/>
+            <Setter Property="MinWidth"          Value="28"/>
         </Style>
     </Window.Resources>
 
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <!-- Menu bar -->
-            <RowDefinition Height="Auto"/>
-            <!-- Tab bar -->
-            <RowDefinition Height="Auto"/>
-            <!-- Toolbar -->
-            <RowDefinition Height="*"/>
-            <!-- Video canvas -->
-            <RowDefinition Height="Auto"/>
-            <!-- Status bar -->
+            <RowDefinition Height="Auto"/> <!-- Row 0: Menu bar          -->
+            <RowDefinition Height="Auto"/> <!-- Row 1: Panel toggle bar  -->
+            <RowDefinition Height="Auto"/> <!-- Row 2: Toolbar           -->
+            <RowDefinition Height="*"/>    <!-- Row 3: Canvas + overlay  -->
+            <RowDefinition Height="Auto"/> <!-- Row 4: Status bar        -->
         </Grid.RowDefinitions>
 
+        <!-- ═══════════════════════════════════════════════════════
+             ROW 0 — Menu bar
+             ═══════════════════════════════════════════════════════ -->
         <Menu Grid.Row="0"
-      Background="#252525"
-      Foreground="#CCCCCC"
-      BorderBrush="#3A3A3A"
-      BorderThickness="0,0,0,1"
-      FontSize="12">
+              Background="#252525"
+              Foreground="#CCCCCC"
+              BorderBrush="#3A3A3A"
+              BorderThickness="0,0,0,1"
+              FontSize="12">
             <Menu.Resources>
                 <Style TargetType="MenuItem">
                     <Setter Property="Background" Value="#252525"/>
@@ -137,100 +225,78 @@
 
             <MenuItem Header="_File">
                 <MenuItem Header="_Open video file..."
-                  Command="{Binding OpenFileCommand}"
-                  InputGestureText="Ctrl+O"/>
+                          Command="{Binding OpenFileCommand}"
+                          InputGestureText="Ctrl+O"/>
                 <MenuItem Header="Open video from URL..."
-                  Command="{Binding OpenUrlCommand}"/>
+                          Command="{Binding OpenUrlCommand}"/>
                 <Separator/>
                 <MenuItem Header="_Save settings"
-                  Command="{Binding SaveSettingsCommand}"
-                  InputGestureText="F2"/>
+                          Command="{Binding SaveSettingsCommand}"
+                          InputGestureText="F2"/>
                 <MenuItem Header="_Load settings"
-                  Command="{Binding LoadSettingsCommand}"
-                  InputGestureText="F3"/>
+                          Command="{Binding LoadSettingsCommand}"
+                          InputGestureText="F3"/>
                 <Separator/>
                 <MenuItem Header="E_xit"
-                  Command="{Binding ExitCommand}"
-                  InputGestureText="Alt+F4"/>
+                          Command="{Binding ExitCommand}"
+                          InputGestureText="Alt+F4"/>
             </MenuItem>
 
             <MenuItem Header="_Help">
                 <MenuItem Header="_View Hotkeys"
-                  Command="{Binding ShowHelpWindowCommand}"/>
+                          Command="{Binding ShowHelpWindowCommand}"/>
             </MenuItem>
         </Menu>
 
         <!-- ═══════════════════════════════════════════════════════
-             ROW 1 — Tab bar
+             ROW 1 — Panel toggle bar
+             Toggle buttons open/close the floating overlay panels.
+             Reconstruct is pinned to the right.
              ═══════════════════════════════════════════════════════ -->
-        <TabControl Grid.Row="1"
-                    Background="#2D2D2D"
-                    BorderThickness="0,0,0,1"
-                    BorderBrush="#444444">
+        <Border Grid.Row="1"
+                Background="#2D2D2D"
+                BorderBrush="#444444"
+                BorderThickness="0,0,0,1">
+            <DockPanel>
+                <!-- Reconstruct pinned right -->
+                <Button DockPanel.Dock="Right"
+                        Style="{StaticResource AccentButton}"
+                        Content="▶  Reconstruct"
+                        Margin="4,3,8,3"
+                        Command="{Binding StartReconstructionCommand}"/>
 
-            <!-- Settings Tab -->
-            <TabItem Header="Settings">
-                <!-- SettingsPanel UserControl goes here once built -->
-                <TextBlock Text="Settings panel — coming soon"
-                           Foreground="#666" Margin="12" FontSize="12"/>
-            </TabItem>
-
-            <!-- Colors Tab -->
-            <TabItem Header="Colors">
-                <TextBlock Text="Color map panel — coming soon"
-                           Foreground="#666" Margin="12" FontSize="12"/>
-            </TabItem>
-
-            <!-- Sparks Tab -->
-            <TabItem Header="Sparks">
-                <TextBlock Text="Sparks panel — coming soon"
-                           Foreground="#666" Margin="12" FontSize="12"/>
-            </TabItem>
-
-            <!-- Extra Tab -->
-            <TabItem Header="Extra">
-                <TextBlock Text="Extra panel — coming soon"
-                           Foreground="#666" Margin="12" FontSize="12"/>
-            </TabItem>
-
-            <!-- Reconstruct button pinned to the right of the tab bar -->
-            <TabControl.Template>
-                <ControlTemplate TargetType="TabControl">
-                    <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="*"/>
-                        </Grid.RowDefinitions>
-                        <Grid Grid.Row="0" Background="#2D2D2D">
-                            <TabPanel IsItemsHost="True" HorizontalAlignment="Left"/>
-                            <Button Style="{StaticResource AccentButton}"
-                                    Content="▶  Reconstruct"
-                                    HorizontalAlignment="Right"
-                                    Margin="0,4,8,4"
-                                    Command="{Binding StartReconstructionCommand}"/>
-                        </Grid>
-                        <Border Grid.Row="1"
-                                Background="{TemplateBinding Background}"
-                                BorderBrush="#444444"
-                                BorderThickness="0,1,0,0">
-                            <ContentPresenter ContentSource="SelectedContent"/>
-                        </Border>
-                    </Grid>
-                </ControlTemplate>
-            </TabControl.Template>
-
-        </TabControl>
+                <!-- Panel toggle buttons — no Spacing attribute, use Margin on each -->
+                <StackPanel Orientation="Horizontal">
+                    <ToggleButton Style="{StaticResource PanelToggleButton}"
+                                  Content="Detection"
+                                  IsChecked="{Binding IsDetectionPanelVisible}"
+                                  ToolTip="Toggle detection settings panel"/>
+                    <ToggleButton Style="{StaticResource PanelToggleButton}"
+                                  Content="Key Layout"
+                                  IsChecked="{Binding IsKeyLayoutPanelVisible}"
+                                  ToolTip="Toggle key layout panel"/>
+                    <ToggleButton Style="{StaticResource PanelToggleButton}"
+                                  Content="Sparks"
+                                  IsChecked="{Binding IsSparksPanelVisible}"
+                                  ToolTip="Toggle sparks panel"/>
+                    <ToggleButton Style="{StaticResource PanelToggleButton}"
+                                  Content="Extra"
+                                  IsChecked="{Binding IsExtraPanelVisible}"
+                                  ToolTip="Toggle extra / alternate keys panel"/>
+                </StackPanel>
+            </DockPanel>
+        </Border>
 
         <!-- ═══════════════════════════════════════════════════════
-             ROW 1 — Toolbar (nav + quick controls)
+             ROW 2 — Toolbar (nav + quick controls)
              ═══════════════════════════════════════════════════════ -->
         <Border Grid.Row="2"
-        Background="#2D2D2D"
-        BorderBrush="#444444"
-        BorderThickness="0,0,0,1">
+                Background="#2D2D2D"
+                BorderBrush="#444444"
+                BorderThickness="0,0,0,1">
             <StackPanel>
 
-                <!-- Existing quick controls row -->
+                <!-- Quick controls row -->
                 <Grid Margin="8,5">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto"/>
@@ -238,186 +304,208 @@
                     </Grid.ColumnDefinitions>
 
                     <!-- Quick controls: sensitivity, tempo, octave -->
-                    <StackPanel Grid.Column="0" Orientation="Horizontal" Margin="14">
+                    <StackPanel Grid.Column="0" Orientation="Horizontal" Margin="4">
 
                         <!-- Sensitivity slider -->
                         <StackPanel Orientation="Horizontal" Margin="5">
                             <TextBlock Text="Sensitivity" Style="{StaticResource ToolbarLabel}"/>
                             <Slider Width="80" Minimum="0" Maximum="130"
-                Value="{Binding Prefs.Sensitivity}"
-                VerticalAlignment="Center"/>
+                                    Value="{Binding Prefs.Sensitivity}"
+                                    VerticalAlignment="Center"/>
                             <TextBlock Text="{Binding Prefs.Sensitivity}"
-                   Style="{StaticResource ValueLabel}"/>
+                                       Style="{StaticResource ValueLabel}"/>
                         </StackPanel>
 
                         <!-- Tempo changer -->
                         <StackPanel Orientation="Horizontal" Margin="5">
                             <TextBlock Text="Tempo" Style="{StaticResource ToolbarLabel}"/>
                             <xctk:IntegerUpDown Value="{Binding Prefs.Tempo}"
-                            Minimum="30" 
-                            Maximum="240"
-                            Margin="5,0" Background="#FF2D2D2D" Foreground="#FFCCCCCC" CaretBrush="#FFCCCCCC"
-                            />
-
+                                                Minimum="30"
+                                                Maximum="240"
+                                                Margin="5,0"
+                                                Background="#FF2D2D2D"
+                                                Foreground="#FFCCCCCC"
+                                                CaretBrush="#FFCCCCCC"/>
                         </StackPanel>
 
                         <!-- Octave stepper -->
                         <StackPanel Orientation="Horizontal" Margin="3">
                             <TextBlock Text="Octave" Style="{StaticResource ToolbarLabel}"/>
                             <Button Content="−" Style="{StaticResource DarkButton}"
-                Width="22" Padding="0"
-                Command="{Binding LowerOctaveCommand}"/>
+                                    Width="22" Padding="0"
+                                    Command="{Binding LowerOctaveCommand}"/>
                             <TextBlock Text="{Binding Prefs.Octave}"
-                   Style="{StaticResource ValueLabel}"
-                   TextAlignment="Center" MinWidth="18"/>
+                                       Style="{StaticResource ValueLabel}"
+                                       TextAlignment="Center" MinWidth="18"/>
                             <Button Content="+" Style="{StaticResource DarkButton}"
-                Width="22" Padding="0"
-                Command="{Binding RaiseOctaveCommand}"/>
+                                    Width="22" Padding="0"
+                                    Command="{Binding RaiseOctaveCommand}"/>
                         </StackPanel>
 
                     </StackPanel>
 
+                    <!-- Color channel strip — always shows top 4 channels in a row.
+                         The "▼ More" button opens a floating panel for channels 5-16.
+                         The eyedropper banner is drawn in the OverlayCanvas (not here)
+                         so opening it never causes the toolbar to resize. -->
+                    <Border Grid.Column="1"
+                            BorderBrush="#3A3A3A"
+                            Padding="8,4">
+                        <!-- LastChildFill="False" stops the last item stretching to fill
+                             remaining width, keeping the More button its natural size. -->
+                        <DockPanel LastChildFill="False">
 
-                <!-- Color channel strip -->
-                <Border Grid.Column="1" BorderBrush="#3A3A3A" BorderThickness="0,1,0,0"
-                Padding="8,4">
-                    <DockPanel>
+                            <TextBlock DockPanel.Dock="Left"
+                                       Text="Channels"
+                                       Foreground="#666666"
+                                       FontSize="10"
+                                       VerticalAlignment="Center"
+                                       Margin="0,0,8,0"/>
 
-                        <TextBlock DockPanel.Dock="Left"
-                           Text="Channels"
-                           Foreground="#666666"
-                           FontSize="10"
-                           VerticalAlignment="Center"
-                           Margin="0,0,8,0"/>
+                            <!-- Top 4 channels — always visible in the toolbar row -->
+                            <ItemsControl DockPanel.Dock="Left"
+                                          ItemsSource="{Binding ColorMap.TopChannels}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <StackPanel Orientation="Horizontal"/>
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <!-- Channel pill.
+                                             Opacity drops to 0.4 when channel is disabled. -->
+                                        <Border BorderBrush="#444444"
+                                                BorderThickness="1"
+                                                CornerRadius="3"
+                                                Padding="4,2"
+                                                Margin="0,0,4,0">
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Setter Property="Background" Value="#1E1E1E"/>
+                                                    <Setter Property="Opacity"    Value="1.0"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding Entry.IsEnabled}" Value="False">
+                                                            <Setter Property="Opacity" Value="0.4"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
+                                            <StackPanel Orientation="Horizontal">
 
-                        <!-- Channel items -->
-                        <ItemsControl DockPanel.Dock="Left"
-                              ItemsSource="{Binding ColorMap.VisibleChannels}">
-                            <ItemsControl.ItemsPanel>
-                                <ItemsPanelTemplate>
-                                    <StackPanel Orientation="Horizontal" Margin="4"/>
-                                </ItemsPanelTemplate>
-                            </ItemsControl.ItemsPanel>
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <Border Background="#1E1E1E"
-                                    BorderBrush="#444444"
-                                    BorderThickness="1"
-                                    CornerRadius="3"
-                                    Padding="4,2">
-                                        <StackPanel Orientation="Horizontal" Margin="3">
+                                                <!-- Enable/disable toggle: ● active, ○ inactive -->
+                                                <Button Content="{Binding EnabledLabel}"
+                                                        Style="{StaticResource DarkButton}"
+                                                        Width="14" Height="14" Padding="0"
+                                                        FontSize="9"
+                                                        Command="{Binding ToggleEnabledCommand}"
+                                                        ToolTip="Toggle detection on / off (colors preserved)"/>
 
-                                            <!-- Channel label -->
-                                            <TextBlock Text="{Binding Label}"
-                                               Foreground="#777777"
-                                               FontSize="10"
-                                               VerticalAlignment="Center"
-                                               MinWidth="24"/>
+                                                <!-- Color index label -->
+                                                <TextBlock Text="{Binding Label}"
+                                                           Foreground="#777777"
+                                                           FontSize="10"
+                                                           VerticalAlignment="Center"
+                                                           MinWidth="20"
+                                                           Margin="2,0,0,0"/>
 
-                                            <!-- Light color swatch -->
-                                            <Button Style="{StaticResource SwatchButton}"
-                                            Background="{Binding Entry.Light, Converter={StaticResource RgbToBrush}}"
-                                            Command="{Binding PickLightColorCommand}"
-                                            ToolTip="Light color — click to change"/>
+                                                <!-- MIDI channel stepper: − N + -->
+                                                <Button Content="−"
+                                                        Style="{StaticResource DarkButton}"
+                                                        Width="14" Height="14" Padding="0"
+                                                        FontSize="9" Margin="2,0,0,0"
+                                                        Command="{Binding DecrementChannelCommand}"
+                                                        ToolTip="Lower MIDI channel"/>
+                                                <TextBlock Text="{Binding MidiChannelDisplay}"
+                                                           Foreground="#AAAAAA"
+                                                           FontSize="10"
+                                                           VerticalAlignment="Center"
+                                                           TextAlignment="Center"
+                                                           MinWidth="16"
+                                                           ToolTip="MIDI output channel (1–16)"/>
+                                                <Button Content="+"
+                                                        Style="{StaticResource DarkButton}"
+                                                        Width="14" Height="14" Padding="0"
+                                                        FontSize="9" Margin="0,0,2,0"
+                                                        Command="{Binding IncrementChannelCommand}"
+                                                        ToolTip="Raise MIDI channel"/>
 
-                                            <!-- Dark color swatch -->
-                                            <Button Style="{StaticResource SwatchButton}"
-                                            Background="{Binding Entry.Dark, Converter={StaticResource RgbToBrush}}"
-                                            Command="{Binding PickDarkColorCommand}"
-                                            ToolTip="Dark color — click to change"/>
+                                                <!-- Light color swatch -->
+                                                <Button Style="{StaticResource SwatchButton}"
+                                                        Background="{Binding Entry.Light, Converter={StaticResource RgbToBrush}}"
+                                                        Command="{Binding PickLightColorCommand}"
+                                                        Margin="2,0,0,0"
+                                                        ToolTip="Light color — click to eyedrop"/>
+
+                                                <!-- Dark color swatch -->
+                                                <Button Style="{StaticResource SwatchButton}"
+                                                        Background="{Binding Entry.Dark, Converter={StaticResource RgbToBrush}}"
+                                                        Command="{Binding PickDarkColorCommand}"
+                                                        Margin="2,0,0,0"
+                                                        ToolTip="Dark color — click to eyedrop"/>
 
                                                 <!-- Remove -->
-                                            <Button Style="{StaticResource DarkButton}"
-                                            Content="✕"
-                                            FontSize="9"
-                                            Width="16" Height="16"
-                                            Padding="0"
-                                            Foreground="#666666"
-                                            Command="{Binding DataContext.ColorMap.RemoveChannelCommand,
-                                                      RelativeSource={RelativeSource AncestorType=Window}}"
-                                            CommandParameter="{Binding}"
-                                            ToolTip="Remove channel"/>
-                                        </StackPanel>
-                                    </Border>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
+                                                <Button Style="{StaticResource DarkButton}"
+                                                        Content="✕"
+                                                        FontSize="9"
+                                                        Width="14" Height="14"
+                                                        Padding="0"
+                                                        Margin="2,0,0,0"
+                                                        Foreground="#666666"
+                                                        Command="{Binding DataContext.ColorMap.RemoveChannelCommand,
+                                                                  RelativeSource={RelativeSource AncestorType=Window}}"
+                                                        CommandParameter="{Binding}"
+                                                        ToolTip="Remove channel"/>
+                                            </StackPanel>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
 
-                        <!-- Add button -->
-                        <Button DockPanel.Dock="Left"
-                        Content="+ Add"
-                        Style="{StaticResource DarkButton}"
-                        Margin="4,0,0,0"
-                        Command="{Binding ColorMap.AddChannelCommand}"/>
 
-                        <!-- Separator -->
-                        <Rectangle DockPanel.Dock="Left"
-                           Width="1" Fill="#444444" Margin="6,0"/>
 
-                        <!-- Expand/collapse toggle -->
-                        <Button DockPanel.Dock="Left"
-                        Content="{Binding ColorMap.ToggleLabel}"
-                        Style="{StaticResource DarkButton}"
-                        Command="{Binding ColorMap.ToggleExpandedCommand}"/>
+                            <!-- Separator -->
+                            <Rectangle DockPanel.Dock="Left"
+                                       Width="1" Fill="#444444" Margin="6,0"/>
 
-                    </DockPanel>
-                </Border>
+                            <!-- When there are 4 or fewer channels show "Add+" which
+                                 adds a new channel directly. Once a 5th channel exists
+                                 this button hides and the More/Less toggle appears instead. -->
+                            <Button DockPanel.Dock="Left"
+                                    Content="Add+"
+                                    Style="{StaticResource DarkButton}"
+                                    Margin="0"
+                                    Command="{Binding ColorMap.AddChannelCommand}"
+                                    Visibility="{Binding ColorMap.HasExpandedChannels,
+                                                 Converter={StaticResource InverseBoolToVisibility}}"
+                                    ToolTip="Add a 5th channel to open the expanded panel"/>
+
+                            <!-- Once there are more than 4 channels this button toggles
+                                 the expanded panel and its label flips ▼ More / ▲ Less. -->
+                            <Button DockPanel.Dock="Left"
+                                    Content="{Binding ColorMap.ExpandButtonLabel}"
+                                    Style="{StaticResource DarkButton}"
+                                    Margin="0"
+                                    Command="{Binding ColorMap.ToggleExpandPanelCommand}"
+                                    Visibility="{Binding ColorMap.HasExpandedChannels,
+                                                 Converter={StaticResource BoolToVisibility}}"
+                                    ToolTip="Show / hide channels 5–16"/>
+
+                        </DockPanel>
+                    </Border>
                 </Grid>
-
-                <!-- Eyedropper active banner — shown while sampling -->
-                <Border Background="#1A3A1A"
-        BorderBrush="#2D6A2D"
-        BorderThickness="0,1,0,0"
-        Padding="8,5"
-        Visibility="{Binding ColorMap.IsEyedropping,
-                     Converter={StaticResource BoolToVisibility}}">
-                    <DockPanel>
-
-                        <!-- Cancel button -->
-                        <Button DockPanel.Dock="Right"
-                Content="Cancel"
-                Style="{StaticResource DarkButton}"
-                Click="CancelEyedrop_Click"
-                Margin="0,0,4,0"/>
-
-                        <!-- Live color preview swatch + hex value -->
-                        <StackPanel DockPanel.Dock="Right"
-                    Orientation="Horizontal"
-                    Margin="0,0,12,0"
-                    VerticalAlignment="Center">
-                            <Border Width="18" Height="18"
-                    CornerRadius="3"
-                    BorderBrush="#555555"
-                    BorderThickness="1"
-                    Background="{Binding ColorMap.LivePreviewColor,
-                                 Converter={StaticResource RgbToBrush}}"
-                    Margin="0,0,5,0"/>
-                            <TextBlock Text="{Binding ColorMap.LivePreviewHex}"
-                       Foreground="#AAAAAA"
-                       FontFamily="Consolas"
-                       FontSize="11"
-                       VerticalAlignment="Center"/>
-                        </StackPanel>
-
-                        <!-- Instruction text -->
-                        <TextBlock Text="⊕  Click on the video to sample a color  —  move cursor to preview"
-                   Foreground="#88CC88"
-                   FontSize="11"
-                   VerticalAlignment="Center"/>
-                    </DockPanel>
-                </Border>
 
             </StackPanel>
         </Border>
-          <!-- ═══════════════════════════════════════════════════════
-             ROW 2 — Video canvas (SKElement + progress bar)
+
+        <!-- ═══════════════════════════════════════════════════════
+             ROW 3 — Video canvas (SKElement) + floating overlay panels
+             The Canvas has no Background so mouse events fall through
+             to the SKElement in areas not covered by a panel.
              ═══════════════════════════════════════════════════════ -->
         <Grid Grid.Row="3">
             <Grid.RowDefinitions>
-                <RowDefinition Height="*"/>
-                <!-- SkiaSharp canvas -->
-                <RowDefinition Height="Auto"/>
-                <!-- Progress bar -->
+                <RowDefinition Height="*"/>    <!-- SkiaSharp canvas -->
+                <RowDefinition Height="Auto"/> <!-- Seekbar / progress -->
             </Grid.RowDefinitions>
 
             <!-- SkiaSharp render surface — video frame + key overlays drawn here -->
@@ -425,14 +513,755 @@
                                x:Name="MainCanvas"
                                PaintSurface="MainCanvas_PaintSurface"/>
 
-            <!-- Seekbar and progress bar-->
+            <!--  Floating panel overlay 
+                 Canvas has no Background so empty areas are fully transparent
+                 to mouse events — only the panel Borders consume input.
+                 ZIndex keeps panels above the SKElement.
+                  -->
+            <Canvas Grid.Row="0"
+                    x:Name="OverlayCanvas"
+                    Panel.ZIndex="10">
+
+                <!--  Detection panel  -->
+                <Border x:Name="DetectionPanel"
+                        Style="{StaticResource FloatingPanel}"
+                        Canvas.Left="10" Canvas.Top="10"
+                        Width="270"
+                        Visibility="{Binding IsDetectionPanelVisible,
+                                     Converter={StaticResource BoolToVisibility}}">
+                    <StackPanel>
+                        <!-- Title bar / drag handle -->
+                        <Border x:Name="DetectionTitleBar"
+                                Style="{StaticResource PanelTitleBar}"
+                                MouseDown="Panel_TitleBar_MouseDown"
+                                MouseMove="Panel_TitleBar_MouseMove"
+                                MouseUp="Panel_TitleBar_MouseUp"
+                                Tag="DetectionPanel">
+                            <DockPanel>
+                                <Button DockPanel.Dock="Right" Content="✕"
+                                        Style="{StaticResource DarkButton}"
+                                        Width="18" Height="18" Padding="0" FontSize="10"
+                                        Click="CloseDetectionPanel_Click"/>
+                                <TextBlock Text="Detection" Foreground="#CCCCCC"
+                                           FontSize="11" VerticalAlignment="Center"/>
+                            </DockPanel>
+                        </Border>
+                        <!-- Content -->
+                        <StackPanel Margin="10,8">
+                            <TextBlock Text="COLOR MATCHING" Style="{StaticResource SectionHeader}"/>
+
+                            <!-- Sensitivity -->
+                            <Grid Margin="0,0,0,4">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="70"/>
+                                    <ColumnDefinition Width="30"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Sensitivity"
+                                           Style="{StaticResource SettingLabel}" Width="Auto"/>
+                                <Slider Grid.Column="1" Minimum="0" Maximum="130"
+                                        Value="{Binding Prefs.Sensitivity}"
+                                        VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="2" Text="{Binding Prefs.Sensitivity}"
+                                           Style="{StaticResource ValueLabel}" Margin="4,0,0,0"/>
+                            </Grid>
+
+                            <!-- Min duration -->
+                            <Grid Margin="0,0,0,4">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="70"/>
+                                    <ColumnDefinition Width="38"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Min note dur (s)"
+                                           Style="{StaticResource SettingLabel}" Width="Auto"/>
+                                <Slider Grid.Column="1" Minimum="0" Maximum="2"
+                                        TickFrequency="0.01" IsSnapToTickEnabled="True"
+                                        Value="{Binding Prefs.MinimalDuration}"
+                                        VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="2"
+                                           Text="{Binding Prefs.MinimalDuration, StringFormat='{}{0:F2}'}"
+                                           Style="{StaticResource ValueLabel}" Margin="4,0,0,0"/>
+                            </Grid>
+
+                            <TextBlock Text="NOTE OPTIONS" Style="{StaticResource SectionHeader}" Margin="0,6,0,5"/>
+                            <CheckBox Style="{StaticResource DarkCheckBox}"
+                                      Content="Notes overlap (permit restrike)"
+                                      IsChecked="{Binding Prefs.NotesOverlap}"
+                                      Margin="0,0,0,3"/>
+                            <CheckBox Style="{StaticResource DarkCheckBox}"
+                                      Content="Ignore minimal duration notes"
+                                      IsChecked="{Binding Prefs.IgnoreMinimalDuration}"
+                                      Margin="0,0,0,3"/>
+                            <CheckBox Style="{StaticResource DarkCheckBox}"
+                                      Content="Single key priority (rollcheck)"
+                                      IsChecked="{Binding Prefs.Rollcheck}"
+                                      Margin="0,0,0,3"/>
+                            <CheckBox Style="{StaticResource DarkCheckBox}"
+                                      Content="Prioritize white keys"
+                                      IsChecked="{Binding Prefs.RollcheckPriority}"
+                                      Margin="0,0,0,3"/>
+                            <CheckBox Style="{StaticResource DarkCheckBox}"
+                                      Content="Sync notes start position"
+                                      IsChecked="{Binding Prefs.SyncNotesStartPos}"
+                                      Margin="0,0,0,3"/>
+
+                            <!-- Sync delta -->
+                            <Grid Margin="0,6,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="80"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Sync delta (ms)"
+                                           Style="{StaticResource SettingLabel}" Width="Auto"/>
+                                <xctk:IntegerUpDown Grid.Column="1"
+                                                    Value="{Binding Prefs.SyncNotesStartPosDeltaMs,
+                                                            Converter={StaticResource DoubleToInt}}"
+                                                    Minimum="0" Maximum="5000"
+                                                    Background="#3A3A3A" Foreground="#CCCCCC"
+                                                    FontSize="11"/>
+                            </Grid>
+
+                            <!-- Frame range quick-set buttons -->
+                            <TextBlock Text="FRAME RANGE" Style="{StaticResource SectionHeader}" Margin="0,10,0,5"/>
+                            <Grid Margin="0,0,0,3">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Start frame"
+                                           Style="{StaticResource SettingLabel}" Width="Auto"
+                                           VerticalAlignment="Center"/>
+                                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                    <Button Content="Set" Style="{StaticResource DarkButton}"
+                                            Padding="6,2"
+                                            Command="{Binding SetStartFrameToCurrentCommand}"
+                                            ToolTip="Set to current frame (S)"/>
+                                    <Button Content="Reset" Style="{StaticResource DarkButton}"
+                                            Padding="6,2" Margin="3,0,0,0"
+                                            Command="{Binding ResetStartFrameCommand}"
+                                            ToolTip="Reset to beginning (Shift+S)"/>
+                                </StackPanel>
+                            </Grid>
+                            <TextBlock Text="{Binding Prefs.StartFrame, StringFormat='  frame {0}'}"
+                                       Foreground="#555" FontSize="10" Margin="0,0,0,4"/>
+                            <Grid Margin="0,0,0,3">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="End frame"
+                                           Style="{StaticResource SettingLabel}" Width="Auto"
+                                           VerticalAlignment="Center"/>
+                                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                    <Button Content="Set" Style="{StaticResource DarkButton}"
+                                            Padding="6,2"
+                                            Command="{Binding SetEndFrameToCurrentCommand}"
+                                            ToolTip="Set to current frame (E)"/>
+                                    <Button Content="Reset" Style="{StaticResource DarkButton}"
+                                            Padding="6,2" Margin="3,0,0,0"
+                                            Command="{Binding ResetEndFrameCommand}"
+                                            ToolTip="Reset to end (Shift+E)"/>
+                                </StackPanel>
+                            </Grid>
+                            <TextBlock Text="{Binding Prefs.EndFrame, StringFormat='  frame {0}'}"
+                                       Foreground="#555" FontSize="10"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!--  Key Layout panel  -->
+                <Border x:Name="KeyLayoutPanel"
+                        Style="{StaticResource FloatingPanel}"
+                        Canvas.Left="290" Canvas.Top="10"
+                        Width="270"
+                        Visibility="{Binding IsKeyLayoutPanelVisible,
+                                     Converter={StaticResource BoolToVisibility}}">
+                    <StackPanel>
+                        <Border x:Name="KeyLayoutTitleBar"
+                                Style="{StaticResource PanelTitleBar}"
+                                MouseDown="Panel_TitleBar_MouseDown"
+                                MouseMove="Panel_TitleBar_MouseMove"
+                                MouseUp="Panel_TitleBar_MouseUp"
+                                Tag="KeyLayoutPanel">
+                            <DockPanel>
+                                <Button DockPanel.Dock="Right" Content="✕"
+                                        Style="{StaticResource DarkButton}"
+                                        Width="18" Height="18" Padding="0" FontSize="10"
+                                        Click="CloseKeyLayoutPanel_Click"/>
+                                <TextBlock Text="Key Layout" Foreground="#CCCCCC"
+                                           FontSize="11" VerticalAlignment="Center"/>
+                            </DockPanel>
+                        </Border>
+                        <StackPanel Margin="10,8">
+                            <TextBlock Text="GEOMETRY" Style="{StaticResource SectionHeader}"/>
+
+                            <!-- Key count -->
+                            <Grid Margin="0,0,0,4">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="80"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Key count"
+                                           Style="{StaticResource SettingLabel}" Width="Auto"/>
+                                <xctk:IntegerUpDown Grid.Column="1"
+                                                    Value="{Binding Prefs.KeyCount}"
+                                                    Minimum="12" Maximum="144"
+                                                    Background="#3A3A3A" Foreground="#CCCCCC"
+                                                    FontSize="11"/>
+                            </Grid>
+
+                            <!-- White key width -->
+                            <Grid Margin="0,0,0,4">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="80"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="White key width"
+                                           Style="{StaticResource SettingLabel}" Width="Auto"/>
+                                <xctk:DoubleUpDown Grid.Column="1"
+                                                   Value="{Binding Prefs.WhiteKeyWidth}"
+                                                   Minimum="5" Maximum="60"
+                                                   Increment="0.1" FormatString="F1"
+                                                   Background="#3A3A3A" Foreground="#CCCCCC"
+                                                   FontSize="11"/>
+                            </Grid>
+
+                            <!-- X offset white -->
+                            <Grid Margin="0,0,0,4">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="80"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="X offset (white)"
+                                           Style="{StaticResource SettingLabel}" Width="Auto"/>
+                                <xctk:IntegerUpDown Grid.Column="1"
+                                                    Value="{Binding Prefs.XOffsetWhiteKeys}"
+                                                    Minimum="-2000" Maximum="5000"
+                                                    Background="#3A3A3A" Foreground="#CCCCCC"
+                                                    FontSize="11"/>
+                            </Grid>
+
+                            <!-- Y offset white -->
+                            <Grid Margin="0,0,0,4">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="80"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Y offset (white)"
+                                           Style="{StaticResource SettingLabel}" Width="Auto"/>
+                                <xctk:IntegerUpDown Grid.Column="1"
+                                                    Value="{Binding Prefs.YOffsetWhiteKeys}"
+                                                    Minimum="-2000" Maximum="5000"
+                                                    Background="#3A3A3A" Foreground="#CCCCCC"
+                                                    FontSize="11"/>
+                            </Grid>
+
+                            <!-- Y offset black -->
+                            <Grid Margin="0,0,0,4">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="80"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Y offset (black)"
+                                           Style="{StaticResource SettingLabel}" Width="Auto"/>
+                                <xctk:IntegerUpDown Grid.Column="1"
+                                                    Value="{Binding Prefs.YOffsetBlackKeys}"
+                                                    Minimum="-500" Maximum="500"
+                                                    Background="#3A3A3A" Foreground="#CCCCCC"
+                                                    FontSize="11"/>
+                            </Grid>
+
+                            <!-- Black key relative position -->
+                            <Grid Margin="0,0,0,4">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="60"/>
+                                    <ColumnDefinition Width="38"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Black key rel pos"
+                                           Style="{StaticResource SettingLabel}" Width="Auto"/>
+                                <Slider Grid.Column="1" Minimum="0" Maximum="1"
+                                        TickFrequency="0.01" IsSnapToTickEnabled="True"
+                                        Value="{Binding Prefs.BlackKeyRelativePosition}"
+                                        VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="2"
+                                           Text="{Binding Prefs.BlackKeyRelativePosition, StringFormat='{}{0:F2}'}"
+                                           Style="{StaticResource ValueLabel}" Margin="4,0,0,0"/>
+                            </Grid>
+
+                            <!-- Keys angle -->
+                            <Grid Margin="0,0,0,4">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="80"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Keys angle (°)"
+                                           Style="{StaticResource SettingLabel}" Width="Auto"/>
+                                <xctk:DoubleUpDown Grid.Column="1"
+                                                   Value="{Binding Prefs.KeysAngle}"
+                                                   Minimum="-180" Maximum="180"
+                                                   Increment="5" FormatString="F0"
+                                                   Background="#3A3A3A" Foreground="#CCCCCC"
+                                                   FontSize="11"/>
+                            </Grid>
+
+                            <TextBlock Text="ACTIONS" Style="{StaticResource SectionHeader}" Margin="0,6,0,5"/>
+
+                            <!-- Rotate buttons -->
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                                <Button Content="R+" Style="{StaticResource DarkButton}"
+                                        Width="32" Padding="0"
+                                        Command="{Binding RotateClockwiseCommand}"
+                                        ToolTip="Rotate clockwise (+)"/>
+                                <Button Content="R−" Style="{StaticResource DarkButton}"
+                                        Width="32" Padding="0" Margin="3,0,0,0"
+                                        Command="{Binding RotateCounterClockwiseCommand}"
+                                        ToolTip="Rotate counter-clockwise (−)"/>
+                                <Button Content="V align" Style="{StaticResource DarkButton}"
+                                        Padding="6,3" Margin="3,0,0,0"
+                                        Command="{Binding VerticalAlignKeysCommand}"
+                                        ToolTip="Vertical align to selected key"/>
+                                <Button Content="H align" Style="{StaticResource DarkButton}"
+                                        Padding="6,3" Margin="3,0,0,0"
+                                        Command="{Binding HorizontalAlignKeysCommand}"
+                                        ToolTip="Horizontal align to selected key"/>
+                            </StackPanel>
+
+                            <Button Content="Update key count" Style="{StaticResource DarkButton}"
+                                    HorizontalAlignment="Left"
+                                    Command="{Binding UpdateKeyCountCommand}"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!--  Sparks panel  -->
+                <Border x:Name="SparksPanel"
+                        Style="{StaticResource FloatingPanel}"
+                        Canvas.Left="10" Canvas.Top="10"
+                        Width="270"
+                        Visibility="{Binding IsSparksPanelVisible,
+                                     Converter={StaticResource BoolToVisibility}}">
+                    <StackPanel>
+                        <Border x:Name="SparksTitleBar"
+                                Style="{StaticResource PanelTitleBar}"
+                                MouseDown="Panel_TitleBar_MouseDown"
+                                MouseMove="Panel_TitleBar_MouseMove"
+                                MouseUp="Panel_TitleBar_MouseUp"
+                                Tag="SparksPanel">
+                            <DockPanel>
+                                <Button DockPanel.Dock="Right" Content="✕"
+                                        Style="{StaticResource DarkButton}"
+                                        Width="18" Height="18" Padding="0" FontSize="10"
+                                        Click="CloseSparksPanel_Click"/>
+                                <TextBlock Text="Sparks" Foreground="#CCCCCC"
+                                           FontSize="11" VerticalAlignment="Center"/>
+                            </DockPanel>
+                        </Border>
+                        <StackPanel Margin="10,8">
+                            <TextBlock Text="SPARK DETECTION" Style="{StaticResource SectionHeader}"/>
+                            <TextBlock Text="Detects the fade/sustain glow above keys in some Synthesia videos."
+                                       Foreground="#555" FontSize="10" TextWrapping="Wrap"
+                                       Margin="0,0,0,8"/>
+
+                            <CheckBox Style="{StaticResource DarkCheckBox}"
+                                      Content="Use sparks"
+                                      IsChecked="{Binding Prefs.UseSparks}"
+                                      Margin="0,0,0,6"/>
+
+                            <!-- Spark Y position -->
+                            <Grid Margin="0,0,0,4">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="80"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Spark Y position"
+                                           Style="{StaticResource SettingLabel}" Width="Auto"/>
+                                <xctk:IntegerUpDown Grid.Column="1"
+                                                    Value="{Binding Prefs.SparksYPosition}"
+                                                    Minimum="-500" Maximum="500"
+                                                    Background="#3A3A3A" Foreground="#CCCCCC"
+                                                    FontSize="11"/>
+                            </Grid>
+
+                            <!-- Spark height -->
+                            <Grid Margin="0,0,0,4">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="60"/>
+                                    <ColumnDefinition Width="34"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Spark height (px)"
+                                           Style="{StaticResource SettingLabel}" Width="Auto"/>
+                                <Slider Grid.Column="1" Minimum="1" Maximum="60"
+                                        Value="{Binding SparksHeight}"
+                                        VerticalAlignment="Center"
+                                        IsSnapToTickEnabled="True" TickFrequency="1"/>
+                                <TextBlock Grid.Column="2"
+                                           Text="{Binding SparksHeight, StringFormat='{}{0:F0}'}"
+                                           Style="{StaticResource ValueLabel}" Margin="4,0,0,0"/>
+                            </Grid>
+
+                            <!-- Spark delta -->
+                            <Grid Margin="0,0,0,6">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="60"/>
+                                    <ColumnDefinition Width="34"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Spark delta"
+                                           Style="{StaticResource SettingLabel}" Width="Auto"/>
+                                <Slider Grid.Column="1" Minimum="-50" Maximum="150"
+                                        Value="{Binding SparksDelta}"
+                                        VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="2"
+                                           Text="{Binding SparksDelta, StringFormat='{}{0:F0}'}"
+                                           Style="{StaticResource ValueLabel}" Margin="4,0,0,0"/>
+                            </Grid>
+
+                            <TextBlock Text="POSITION" Style="{StaticResource SectionHeader}"/>
+                            <StackPanel Orientation="Horizontal">
+                                <Button Content="y+" Style="{StaticResource DarkButton}"
+                                        Padding="8,3"
+                                        Command="{Binding MoveSparksUpCommand}"
+                                        ToolTip="Move sparks up (Alt+Up)"/>
+                                <Button Content="y−" Style="{StaticResource DarkButton}"
+                                        Padding="8,3" Margin="4,0,0,0"
+                                        Command="{Binding MoveSparksDownCommand}"
+                                        ToolTip="Move sparks down (Alt+Down)"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!--  Extra panel  -->
+                <Border x:Name="ExtraPanel"
+                        Style="{StaticResource FloatingPanel}"
+                        Canvas.Left="10" Canvas.Top="10"
+                        Width="300"
+                        Visibility="{Binding IsExtraPanelVisible,
+                                     Converter={StaticResource BoolToVisibility}}">
+                    <StackPanel>
+                        <Border x:Name="ExtraTitleBar"
+                                Style="{StaticResource PanelTitleBar}"
+                                MouseDown="Panel_TitleBar_MouseDown"
+                                MouseMove="Panel_TitleBar_MouseMove"
+                                MouseUp="Panel_TitleBar_MouseUp"
+                                Tag="ExtraPanel">
+                            <DockPanel>
+                                <Button DockPanel.Dock="Right" Content="✕"
+                                        Style="{StaticResource DarkButton}"
+                                        Width="18" Height="18" Padding="0" FontSize="10"
+                                        Click="CloseExtraPanel_Click"/>
+                                <TextBlock Text="Extra" Foreground="#CCCCCC"
+                                           FontSize="11" VerticalAlignment="Center"/>
+                            </DockPanel>
+                        </Border>
+                        <StackPanel Margin="10,8">
+                            <TextBlock Text="ALTERNATE KEY MODE" Style="{StaticResource SectionHeader}"/>
+                            <TextBlock Text="Detects presses by color change from a sampled baseline rather than fixed color matching."
+                                       Foreground="#555" FontSize="10" TextWrapping="Wrap"
+                                       Margin="0,0,0,8"/>
+
+                            <CheckBox Style="{StaticResource DarkCheckBox}"
+                                      Content="Use alternate keys"
+                                      IsChecked="{Binding Prefs.UseAlternateKeys}"
+                                      Margin="0,0,0,6"/>
+
+                            <!-- Sensitivity offset -->
+                            <Grid Margin="0,0,0,4">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="60"/>
+                                    <ColumnDefinition Width="34"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Sensitivity offset"
+                                           Style="{StaticResource SettingLabel}" Width="Auto"/>
+                                <Slider Grid.Column="1" Minimum="-100" Maximum="100"
+                                        Value="{Binding AlternateSensitivityOffset}"
+                                        VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="2"
+                                           Text="{Binding AlternateSensitivityOffset, StringFormat='{}{0:F0}'}"
+                                           Style="{StaticResource ValueLabel}" Margin="4,0,0,0"/>
+                            </Grid>
+
+                            <TextBlock Text="Ctrl+click the canvas to select a key, then use Update selected."
+                                       Foreground="#555" FontSize="10" TextWrapping="Wrap"
+                                       Margin="0,0,0,8"/>
+
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                <Button Content="Read all colors" Style="{StaticResource DarkButton}"
+                                        Padding="8,3"
+                                        Command="{Binding SampleAllKeyColorsCommand}"
+                                        ToolTip="Sample current colors for all keys"/>
+                                <Button Content="Update selected" Style="{StaticResource DarkButton}"
+                                        Padding="8,3" Margin="4,0,0,0"
+                                        Command="{Binding UpdateSelectedKeyColorCommand}"
+                                        ToolTip="Update color for selected key only"/>
+                            </StackPanel>
+
+                            <TextBlock Text="DISPLAY" Style="{StaticResource SectionHeader}"/>
+
+                            <!-- Key line height -->
+                            <Grid Margin="0,0,0,4">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="60"/>
+                                    <ColumnDefinition Width="34"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Key line height"
+                                           Style="{StaticResource SettingLabel}" Width="Auto"/>
+                                <Slider Grid.Column="1" Minimum="0" Maximum="2000"
+                                        Value="{Binding LineHeight}"
+                                        VerticalAlignment="Center"
+                                        IsSnapToTickEnabled="True" TickFrequency="1"/>
+                                <TextBlock Grid.Column="2"
+                                           Text="{Binding LineHeight, StringFormat='{}{0:F0}'}"
+                                           Style="{StaticResource ValueLabel}" Margin="4,0,0,0"/>
+                            </Grid>
+
+                            <TextBlock Text="PER-COLOR SENSITIVITY" Style="{StaticResource SectionHeader}" Margin="0,6,0,5"/>
+
+                            <CheckBox Style="{StaticResource DarkCheckBox}"
+                                      Content="Enable per-color sensitivity"
+                                      IsChecked="{Binding Prefs.UsePerColorSensitivity}"
+                                      Margin="0,0,0,6"/>
+
+                            <!-- Selected color delta -->
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="60"/>
+                                    <ColumnDefinition Width="34"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Selected color delta"
+                                           Style="{StaticResource SettingLabel}" Width="Auto"/>
+                                <Slider Grid.Column="1" Minimum="0" Maximum="130"
+                                        Value="{Binding SelectedColorDelta}"
+                                        VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="2"
+                                           Text="{Binding SelectedColorDelta, StringFormat='{}{0:F0}'}"
+                                           Style="{StaticResource ValueLabel}" Margin="4,0,0,0"/>
+                            </Grid>
+                            <TextBlock Text="Select a color swatch in the channel bar first."
+                                       Foreground="#555" FontSize="10" Margin="0,4,0,0"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- ── Eyedropper notice panel ─────────────────────────────────────────────────
+                     Shown while sampling. Floats over the canvas so the
+                     toolbar height never changes when it appears/disappears. -->
+                <Border x:Name="EyedropNoticePanel"
+                        Style="{StaticResource FloatingPanel}"
+                        Canvas.Left="10" Canvas.Top="10"
+                        MinWidth="380"
+                        Visibility="{Binding ColorMap.IsEyedropping,
+                                     Converter={StaticResource BoolToVisibility}}">
+                    <DockPanel Margin="10,8">
+
+                        <!-- Cancel button -->
+                        <Button DockPanel.Dock="Right"
+                                Content="Cancel"
+                                Style="{StaticResource DarkButton}"
+                                Click="CancelEyedrop_Click"
+                                Margin="8,0,0,0"/>
+
+                        <!-- Live preview swatch + hex -->
+                        <StackPanel DockPanel.Dock="Right"
+                                    Orientation="Horizontal"
+                                    VerticalAlignment="Center"
+                                    Margin="8,0,0,0">
+                            <Border Width="20" Height="20"
+                                    CornerRadius="3"
+                                    BorderBrush="#555555"
+                                    BorderThickness="1"
+                                    Background="{Binding ColorMap.LivePreviewColor,
+                                                 Converter={StaticResource RgbToBrush}}"
+                                    Margin="0,0,6,0"/>
+                            <TextBlock Text="{Binding ColorMap.LivePreviewHex}"
+                                       Foreground="#AAAAAA"
+                                       FontFamily="Consolas"
+                                       FontSize="12"
+                                       VerticalAlignment="Center"/>
+                        </StackPanel>
+
+                        <!-- Instruction -->
+                        <TextBlock Text="⊕  Click on the video to sample — move to preview"
+                                   Foreground="#88CC88"
+                                   FontSize="11"
+                                   VerticalAlignment="Center"/>
+                    </DockPanel>
+                </Border>
+
+                <!-- ── Channel expand panel ─────────────────────────────────────────────────
+                     Shows channels 5-16 in a 2-column grid. Opened by the
+                     "▼ More" button in the toolbar. -->
+                <!-- Canvas.Top="0" puts the panel flush against the top of the canvas
+                     area — which is right below the toolbar, exactly where ▼ More sits. -->
+                <Border x:Name="ChannelExpandPanel"
+                        Style="{StaticResource FloatingPanel}"
+                        Canvas.Right="10" Canvas.Top="0"
+                        Width="480"
+                        Visibility="{Binding ColorMap.IsExpandPanelVisible,
+                                     Converter={StaticResource BoolToVisibility}}">
+                    <StackPanel>
+                        <!-- Title bar -->
+                        <Border Style="{StaticResource PanelTitleBar}"
+                                MouseDown="Panel_TitleBar_MouseDown"
+                                MouseMove="Panel_TitleBar_MouseMove"
+                                MouseUp="Panel_TitleBar_MouseUp"
+                                Tag="ChannelExpandPanel">
+                            <DockPanel>
+                                <Button DockPanel.Dock="Right" Content="✕"
+                                        Style="{StaticResource DarkButton}"
+                                        Width="18" Height="18" Padding="0" FontSize="10"
+                                        Click="CloseChannelExpandPanel_Click"/>
+                                <TextBlock Text="Additional Channels (5–16)"
+                                           Foreground="#CCCCCC" FontSize="11"
+                                           VerticalAlignment="Center"/>
+                            </DockPanel>
+                        </Border>
+
+                        <!-- 2-column grid of expanded channels -->
+                        <ItemsControl ItemsSource="{Binding ColorMap.ExpandedChannels}"
+                                      Margin="8,8,8,10">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <!-- UniformGrid gives us a clean 2-column layout -->
+                                    <UniformGrid Columns="2"/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="#1E1E1E"
+                                            BorderBrush="#444444"
+                                            BorderThickness="1"
+                                            CornerRadius="3"
+                                            Padding="6,4"
+                                            Margin="0,0,4,4">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>  <!-- label -->
+                                                <ColumnDefinition Width="Auto"/>  <!-- − ch + -->
+                                                <ColumnDefinition Width="*"/>     <!-- swatches -->
+                                                <ColumnDefinition Width="Auto"/>  <!-- remove -->
+                                            </Grid.ColumnDefinitions>
+
+                                            <!-- Enable/disable toggle -->
+                                            <StackPanel Grid.Column="0" Orientation="Horizontal"
+                                                        VerticalAlignment="Center"
+                                                        Margin="0,0,4,0">
+                                                <Button Content="{Binding EnabledLabel}"
+                                                        Style="{StaticResource DarkButton}"
+                                                        Width="14" Height="14" Padding="0"
+                                                        FontSize="9"
+                                                        Command="{Binding ToggleEnabledCommand}"
+                                                        ToolTip="Toggle detection on / off"/>
+                                                <!-- Color index label -->
+                                                <TextBlock Text="{Binding Label}"
+                                                           Foreground="#777777"
+                                                           FontSize="10"
+                                                           VerticalAlignment="Center"
+                                                           MinWidth="24"
+                                                           Margin="3,0,0,0"/>
+                                            </StackPanel>
+
+                                            <!-- MIDI channel stepper -->
+                                            <StackPanel Grid.Column="1" Orientation="Horizontal"
+                                                        VerticalAlignment="Center"
+                                                        Margin="0,0,6,0">
+                                                <Button Content="−"
+                                                        Style="{StaticResource DarkButton}"
+                                                        Width="16" Height="16" Padding="0"
+                                                        FontSize="10"
+                                                        Command="{Binding DecrementChannelCommand}"
+                                                        ToolTip="Lower MIDI channel"/>
+                                                <TextBlock Text="{Binding MidiChannelDisplay}"
+                                                           Foreground="#CCCCCC"
+                                                           FontSize="11"
+                                                           VerticalAlignment="Center"
+                                                           TextAlignment="Center"
+                                                           MinWidth="22"
+                                                           Margin="2,0"
+                                                           ToolTip="MIDI output channel (1–16)"/>
+                                                <Button Content="+"
+                                                        Style="{StaticResource DarkButton}"
+                                                        Width="16" Height="16" Padding="0"
+                                                        FontSize="10"
+                                                        Command="{Binding IncrementChannelCommand}"
+                                                        ToolTip="Raise MIDI channel"/>
+                                            </StackPanel>
+
+                                            <!-- Light + Dark swatches -->
+                                            <StackPanel Grid.Column="2" Orientation="Horizontal"
+                                                        VerticalAlignment="Center">
+                                                <Button Style="{StaticResource SwatchButton}"
+                                                        Background="{Binding Entry.Light, Converter={StaticResource RgbToBrush}}"
+                                                        Command="{Binding PickLightColorCommand}"
+                                                        Margin="0,0,3,0"
+                                                        ToolTip="Light color — click to eyedrop"/>
+                                                <Button Style="{StaticResource SwatchButton}"
+                                                        Background="{Binding Entry.Dark, Converter={StaticResource RgbToBrush}}"
+                                                        Command="{Binding PickDarkColorCommand}"
+                                                        ToolTip="Dark color — click to eyedrop"/>
+                                            </StackPanel>
+
+                                            <!-- Remove -->
+                                            <Button Grid.Column="3"
+                                                    Style="{StaticResource DarkButton}"
+                                                    Content="✕"
+                                                    FontSize="9"
+                                                    Width="16" Height="16"
+                                                    Padding="0"
+                                                    Margin="4,0,0,0"
+                                                    Foreground="#666666"
+                                                    Command="{Binding DataContext.ColorMap.RemoveChannelCommand,
+                                                              RelativeSource={RelativeSource AncestorType=Window}}"
+                                                    CommandParameter="{Binding}"
+                                                    ToolTip="Remove channel"/>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <!-- Add channel from within this panel -->
+                        <StackPanel Orientation="Horizontal" Margin="8,0,8,8">
+                            <Button Content="+ Add channel"
+                                    Style="{StaticResource DarkButton}"
+                                    Padding="8,3"
+                                    Command="{Binding ColorMap.AddChannelCommand}"
+                                    ToolTip="Add a new color channel (max 16)"/>
+                            <TextBlock Text="{Binding ColorMap.AllChannels.Count, StringFormat='{}{0} / 16 channels'}"
+                                       Foreground="#555555"
+                                       FontSize="10"
+                                       VerticalAlignment="Center"
+                                       Margin="8,0,0,0"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+            </Canvas>
+
+            <!-- Seekbar and progress bar -->
             <Grid Grid.Row="1" Background="#1A1A1A">
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <!-- Seek bar -->
-                    <RowDefinition Height="Auto"/>
-                    <!-- Progress bar (reconstruction only) -->
+                    <RowDefinition Height="Auto"/> <!-- Progress bar (reconstruction only) -->
+                    <RowDefinition Height="Auto"/> <!-- Seek bar -->
                 </Grid.RowDefinitions>
+
+                <!-- Reconstruction progress — only visible while processing -->
+                <Grid Grid.Row="0"
+                      Visibility="{Binding IsProcessing,
+                                   Converter={StaticResource BoolToVisibility}}"
+                      Height="6">
+                    <ProgressBar Value="{Binding ProcessingProgress}"
+                                 Minimum="0" Maximum="1"
+                                 Foreground="#569CD6"
+                                 Background="#333333"
+                                 BorderThickness="0"/>
+                </Grid>
 
                 <!-- Seek bar — always visible -->
                 <Grid Grid.Row="1" Margin="8,4">
@@ -442,103 +1271,92 @@
                     </Grid.ColumnDefinitions>
 
                     <Slider Grid.Column="0"
-                x:Name="SeekSlider"
-                Minimum="0"
-                Maximum="{Binding SeekMax}"
-                Value="{Binding CurrentFrameIndex, Mode=TwoWay}"
-                VerticalAlignment="Center"
-                IsMoveToPointEnabled="True"
-                ValueChanged="SeekSlider_ValueChanged"
+                            x:Name="SeekSlider"
+                            Minimum="0"
+                            Maximum="{Binding SeekMax}"
+                            Value="{Binding CurrentFrameIndex, Mode=TwoWay}"
+                            VerticalAlignment="Center"
+                            IsMoveToPointEnabled="True"
+                            ValueChanged="SeekSlider_ValueChanged"
                             Cursor="Hand"/>
 
                     <TextBlock Grid.Column="1"
-                   Margin="8,0,0,0"
-                   VerticalAlignment="Center"
-                   FontSize="11"
-                   Foreground="#888888"
-                   Text="{Binding FrameCounterDisplay}"/>
-                </Grid>
-
-                <!-- Reconstruction progress — only visible while processing -->
-                <Grid Grid.Row="0"
-          Visibility="{Binding IsProcessing,
-                       Converter={StaticResource BoolToVisibility}}"
-          Height="6">
-                    <ProgressBar Value="{Binding ProcessingProgress}"
-                     Minimum="0" Maximum="1"
-                     Foreground="#569CD6"
-                     Background="#333333"
-                     BorderThickness="0"/>
+                               Margin="8,0,0,0"
+                               VerticalAlignment="Center"
+                               FontSize="11"
+                               Foreground="#888888"
+                               Text="{Binding FrameCounterDisplay}"/>
                 </Grid>
             </Grid>
-
         </Grid>
 
         <!-- ═══════════════════════════════════════════════════════
-     ROW 4 — Status bar
-     ═══════════════════════════════════════════════════════ -->
+             ROW 4 — Status bar
+             ═══════════════════════════════════════════════════════ -->
         <Border Grid.Row="4"
-        Background="#252525"
-        BorderBrush="#3A3A3A"
-        BorderThickness="0,1,0,0"
-        Padding="10,4">
+                Background="#252525"
+                BorderBrush="#3A3A3A"
+                BorderThickness="0,1,0,0"
+                Padding="10,4">
             <Grid>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <!-- Status message -->
-                    <ColumnDefinition Width="Auto"/>
-                    <!-- Nav buttons (centered) -->
-                    <ColumnDefinition Width="*"/>
-                    <!-- Video info -->
+                    <ColumnDefinition Width="*"/>    <!-- Status message -->
+                    <ColumnDefinition Width="Auto"/> <!-- Nav buttons (centered) -->
+                    <ColumnDefinition Width="*"/>    <!-- Video info -->
                 </Grid.ColumnDefinitions>
 
                 <!-- Left — status message -->
                 <TextBlock Grid.Column="0"
-                   Text="{Binding StatusMessage}"
-                   Foreground="#666666"
-                   FontSize="11"
-                   VerticalAlignment="Center"/>
+                           Text="{Binding StatusMessage}"
+                           Foreground="#666666"
+                           FontSize="11"
+                           VerticalAlignment="Center"/>
 
                 <!-- Center — nav buttons -->
                 <StackPanel Grid.Column="1"
-                    Orientation="Horizontal"
-                    Margin="3"
-                    HorizontalAlignment="Center"
-                    VerticalAlignment="Center" Cursor="Hand">
+                            Orientation="Horizontal"
+                            Margin="3"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center">
                     <Button Content="|◀" Style="{StaticResource DarkButton}"
-                    ToolTip="Go to start (Home)"
-                    Command="{Binding ScrollToStartCommand}"/>
+                            ToolTip="Go to start (Home)"
+                            Command="{Binding ScrollToStartCommand}"/>
                     <Button Content="◀◀" Style="{StaticResource DarkButton}"
-                    ToolTip="Fast rewind (PageDown)"
-                    Command="{Binding ScrollFastBackCommand}"/>
+                            ToolTip="Fast rewind (PageDown)"
+                            Margin="2,0,0,0"
+                            Command="{Binding ScrollFastBackCommand}"/>
                     <Button Content="◀" Style="{StaticResource DarkButton}"
-                    ToolTip="Previous frame (Shift+PageDown)"
-                    Command="{Binding ScrollBackOneFrameCommand}"/>
+                            ToolTip="Previous frame (Shift+PageDown)"
+                            Margin="2,0,0,0"
+                            Command="{Binding ScrollBackOneFrameCommand}"/>
                     <Button Content="▶" Style="{StaticResource DarkButton}"
-                    ToolTip="Next frame (Shift+PageUp)"
-                    Command="{Binding ScrollForwardOneFrameCommand}"/>
+                            ToolTip="Next frame (Shift+PageUp)"
+                            Margin="2,0,0,0"
+                            Command="{Binding ScrollForwardOneFrameCommand}"/>
                     <Button Content="▶▶" Style="{StaticResource DarkButton}"
-                    ToolTip="Fast forward (PageUp)"
-                    Command="{Binding ScrollFastForwardCommand}"/>
+                            ToolTip="Fast forward (PageUp)"
+                            Margin="2,0,0,0"
+                            Command="{Binding ScrollFastForwardCommand}"/>
                     <Button Content="▶|" Style="{StaticResource DarkButton}"
-                    ToolTip="Go to end (End)"
-                    Command="{Binding ScrollToEndCommand}"/>
+                            ToolTip="Go to end (End)"
+                            Margin="2,0,0,0"
+                            Command="{Binding ScrollToEndCommand}"/>
                 </StackPanel>
 
                 <!-- Right — video info -->
                 <StackPanel Grid.Column="2"
-                    Orientation="Horizontal"
-                    HorizontalAlignment="Right"
-                    VerticalAlignment="Center"
-                    Margin="16">
+                            Orientation="Horizontal"
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Center"
+                            Margin="16">
                     <TextBlock Text="{Binding VideoResolution}"
-                       Style="{StaticResource ToolbarLabel}"
+                               Style="{StaticResource ToolbarLabel}"
                                Margin="5"/>
                     <TextBlock Text="{Binding VideoFps, StringFormat='{}{0:F0} fps'}"
-                       Style="{StaticResource ToolbarLabel}"
+                               Style="{StaticResource ToolbarLabel}"
                                Margin="5"/>
                     <TextBlock Text="{Binding FrameRangeDisplay}"
-                       Style="{StaticResource ToolbarLabel}"
+                               Style="{StaticResource ToolbarLabel}"
                                Margin="5"/>
                 </StackPanel>
 
